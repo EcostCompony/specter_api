@@ -5,6 +5,7 @@ module.exports = app => {
 	const tokenController = require('./../Controller/TokenController')
 	const authController = require('./../Controller/AuthController')
 	const usersController = require('./../Controller/UsersController')
+	const channelController = require('./../Controller/ChannelController')
 
 	app.all('*', (req, res, next) => {
 		if (!req.query.v) return require('./../response').error(4, "one of the required parameters was not passed", [{ "key": 'v', "value": 'required' }], res)
@@ -16,5 +17,8 @@ module.exports = app => {
 
 	//	users
 	app.route('/api/method/users.getUserId').get(usersController.getUserId)
+
+	//	channel
+	app.route('/api/method/channel.createChannel').post(tokenController.control, channelController.createChannel)
 
 }

@@ -2,6 +2,7 @@
 
 const response = require('./../response')
 const User = require('./../models/User')
+const Channel = require('./../models/Channel')
 
 exports.auth = async (req, res) => {
 
@@ -24,11 +25,10 @@ exports.auth = async (req, res) => {
 			if (!short_link.match(/^[a-z\d\_\.]{3,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regexp": '/^[a-z\\d\\_\\.]{3,32}$/i' })
 			return response.error(5, "invalid parameter value", error_details, res)
 		}
-		if (await User.findOne({ "short_link": short_link })) return response.error(102, "already in use", [{ "key": 'short_link', "value": short_link }], res)
+		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.error(102, "already in use", [{ "key": 'short_link', "value": short_link }], res)
 
 		let user = new User({ "name": name, "short_link": short_link, "ecost_id": ecost_id })
 		await user.save()
-		///////// await EcostUser.updateOne({_id: ecost_id}, { $push: { services: ["specter"] } })
 
 		let access_token = jwt.sign({
 			"type": 'access',
