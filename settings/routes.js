@@ -32,5 +32,6 @@ module.exports = app => {
 
 	//	post
 	app.route('/api/method/post.editPost').put(tokenController.control, postController.editPost)
+	app.route('/api/method/post.deletePost').delete(tokenController.control, postController.deletePost)
 
 }
