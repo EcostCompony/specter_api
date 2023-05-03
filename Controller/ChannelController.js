@@ -1,5 +1,6 @@
 'use strict'
 
+const mongoose = require('mongoose')
 const response = require('./../response')
 const User = require('./../models/User')
 const Channel = require('./../models/Channel')
@@ -107,6 +108,46 @@ exports.getPosts = async (req, res) => {
 		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		return response.send(channel.posts, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.createPost = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var text = req.query.text
+		// # 1 - канал
+		// # 2 - пользователь
+		var author = req.query.author
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !text || !author) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'text', "value": 'required' }, { "key": 'author', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		let subscriber = (await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }]))[0].subscriber
+		if (!subscriber || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (text.trim() == '' || !Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) {
+			let error_details = []
+			if (text.trim() == '') error_details.push({ "key": 'text', "value": text, "regexp": '/./' })
+			if (!Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) error_details.push({ "key": 'author', "value": author, "regexp": '/^[1-2]$/' })
+			return response.error(5, "invalid parameter value", error_details, res)
+		}
+
+		let post = { "author": author == 1 ? channel.title : user.name, "text": text, "datetime": Date.now() }
+		channel.posts.push(post)
+		await channel.save()
+
+		return response.send(post, res)
 	} catch (error) {
 		return response.systemError(error, res)
 	}
