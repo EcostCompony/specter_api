@@ -67,3 +67,25 @@ exports.getChannel = async (req, res) => {
 	}
 
 }
+
+exports.searchChannels = async (req, res) => {
+
+	try {
+		var search_string = req.query.search_string
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!search_string) return response.error(4, "one of the required parameters was not passed", [{ "key": 'search_string', "value": 'required' }], res)
+
+		let channels = await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${search_string}` } }, { "short_link": { "$regex": `(?i)${search_string}` } }] }, 'title short_link category description')
+
+		return response.send(channels, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
