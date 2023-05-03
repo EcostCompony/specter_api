@@ -7,6 +7,7 @@ module.exports = app => {
 	const accountController = require('./../Controller/AccountController')
 	const usersController = require('./../Controller/UsersController')
 	const channelController = require('./../Controller/ChannelController')
+	const postController = require('./../Controller/PostController')
 
 	app.all('*', (req, res, next) => {
 		if (!req.query.v) return require('./../response').error(4, "one of the required parameters was not passed", [{ "key": 'v', "value": 'required' }], res)
@@ -28,5 +29,8 @@ module.exports = app => {
 	app.route('/api/method/channel.searchChannels').get(tokenController.control, channelController.searchChannels)
 	app.route('/api/method/channel.getPosts').get(tokenController.control, channelController.getPosts)
 	app.route('/api/method/channel.createPost').post(tokenController.control, channelController.createPost)
+
+	//	post
+	app.route('/api/method/post.editPost').put(tokenController.control, postController.editPost)
 
 }

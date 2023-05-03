@@ -134,8 +134,11 @@ exports.createPost = async (req, res) => {
 		}
 		if (!channel_id || !text || !author) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'text', "value": 'required' }, { "key": 'author', "value": 'required' }], res)
 		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
-		let subscriber = (await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }]))[0].subscriber
-		if (!subscriber || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (text.trim() == '' || !Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) {
 			let error_details = []
 			if (text.trim() == '') error_details.push({ "key": 'text', "value": text, "regexp": '/./' })
