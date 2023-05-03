@@ -44,3 +44,26 @@ exports.createChannel = async (req, res) => {
 	}
 
 }
+
+exports.getChannel = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		return response.send({ "id": channel._id, "title": channel.title, "short_link": channel.short_link, "category": channel.category, "description": channel.description }, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}

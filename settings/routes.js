@@ -20,5 +20,6 @@ module.exports = app => {
 
 	//	channel
 	app.route('/api/method/channel.createChannel').post(tokenController.control, channelController.createChannel)
+	app.route('/api/method/channel.getChannel').post(tokenController.control, channelController.getChannel)
 
 }

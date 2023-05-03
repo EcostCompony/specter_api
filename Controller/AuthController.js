@@ -1,6 +1,8 @@
 'use strict'
 
 const response = require('./../response')
+const jwt = require('jsonwebtoken')
+const config = require('./../config')
 const User = require('./../models/User')
 const Channel = require('./../models/Channel')
 
@@ -9,7 +11,7 @@ exports.auth = async (req, res) => {
 	try {
 		var name = req.query.name
 		var short_link = req.query.short_link
-		var ecost_id = req.token_payload.ecost_id
+		var ecost_id = req.token_payload.id
 
 		if (req.token_payload.type != 'service_signup' || req.token_payload.service != 'specter') {
 			let error_details = []
