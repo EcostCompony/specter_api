@@ -70,3 +70,62 @@ exports.deletePost = async (req, res) => {
 	}
 
 }
+
+exports.getComments = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var post_id = req.query.post_id
+
+		let channel = await Channel.findOne({ "_id": channel_id }, 'posts')
+		let post = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$posts' }, { "$match": { "posts._id": new mongoose.Types.ObjectId(post_id) } }, { "$project": { "post": "$posts" } }])
+		if (post[0]) post = post[0].post
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !post_id) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (!post) return response.error(110, "not found", [{ "key": 'post_id', "value": post_id }], res)
+
+		return response.send(post.comments, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.createComment = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var post_id = req.query.post_id
+		var text = req.query.text
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		let post = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$posts' }, { "$match": { "posts._id": new mongoose.Types.ObjectId(post_id) } }, { "$project": { "post": "$posts" } }])
+		if (post[0]) post = post[0].post
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !post_id || !text) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (!post) return response.error(110, "not found", [{ "key": 'post_id', "value": post_id }], res)
+		if (text.trim() == '') return response.error(5, "invalid parameter value", [{ "key": 'text', "value": text, "regexp": '/./' }], res)
+
+		let comment = { "author_id": req.token_payload.service_id, "text": text, "datetime": Date.now() }
+		await Channel.findOneAndUpdate({ "_id": channel_id, "posts._id": post_id }, { "$push": { "posts.$.comments": comment } })
+
+		return response.send(comment, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
