@@ -156,3 +156,136 @@ exports.createPost = async (req, res) => {
 	}
 
 }
+
+exports.changeTitle = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var title = req.query.title
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !title) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'title', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (title.length > 32) return response.error(5, "invalid parameter value", [{ "key": 'title', "value": title, "regexp": '/^.{1,32}$/' }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		await Channel.findOneAndUpdate({ "_id": channel_id }, { "$set": { "title": title } })
+
+		return response.send(await Channel.findOne({ "_id": channel_id }, 'title short_link category description'), res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.changeShortLink = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var short_link = req.query.short_link
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !short_link) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (!short_link.match(/^[a-z0-9_.]{3,32}$/i)) return response.error(5, "invalid parameter value", [{ "key": 'short_link', "value": short_link, "regexp": '/^[a-z0-9_.]{3,32}$/i' }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.error(102, "channel creation error: the short link is already in use", [{ "key": 'short_link', "value": short_link }], res)
+
+		await Channel.findOneAndUpdate({ "_id": channel_id }, { "$set": { "short_link": short_link } })
+
+		return response.send(await Channel.findOne({ "_id": channel_id }, 'title short_link category description'), res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.changeCategory = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var category = req.query.category
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !category) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'category', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (category && (!Number.isInteger(category) || category < 1 || category > 2)) return response.error(5, "invalid parameter value", [{ "key": 'category', "value": category, "regexp": '/^[1-2]$/' }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		await Channel.findOneAndUpdate({ "_id": channel_id }, { "$set": { "category": category } })
+
+		return response.send(await Channel.findOne({ "_id": channel_id }, 'title short_link category description'), res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.changeDescription = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+		var description = req.query.description
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id || !description) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'description', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (description && description.length > 256) return response.error(5, "invalid parameter value", [{ "key": 'description', "value": description, "regexp": '/^.{1,256}$/' }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		await Channel.findOneAndUpdate({ "_id": channel_id }, { "$set": { "description": description } })
+
+		return response.send(await Channel.findOne({ "_id": channel_id }, 'title short_link category description'), res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
