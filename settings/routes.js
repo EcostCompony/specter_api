@@ -4,11 +4,10 @@ module.exports = app => {
 
 	const tokenController = require('./../Controller/TokenController')
 	const authController = require('./../Controller/AuthController')
-	const accountController = require('./../Controller/AccountController')
 	const usersController = require('./../Controller/UsersController')
-	const channelController = require('./../Controller/ChannelController')
-	const postController = require('./../Controller/PostController')
-	const commentController = require('./../Controller/CommentController')
+	const channelsController = require('./../Controller/ChannelsController')
+	const postsController = require('./../Controller/PostsController')
+	const commentsController = require('./../Controller/CommentsController')
 
 	app.all('*', (req, res, next) => {
 		if (!req.query.v) return require('./../response').error(4, "one of the required parameters was not passed", [{ "key": 'v', "value": 'required' }], res)
@@ -16,29 +15,31 @@ module.exports = app => {
 	})
 
 	//	auth
-	app.route('/api/method/auth').post(tokenController.control, authController.auth)
-
-	//	account
-	app.route('/api/method/account.getChannels').get(tokenController.control, accountController.getChannels)
+	app.route('/api/method/auth').all(tokenController.control, authController.auth)
 
 	//	users
-	app.route('/api/method/users.getUserId').get(usersController.getUserId)
+	app.route('/api/method/users.get').all(usersController.get)
 
-	//	channel
-	app.route('/api/method/channel.createChannel').post(tokenController.control, channelController.createChannel)
-	app.route('/api/method/channel.getChannel').get(tokenController.control, channelController.getChannel)
-	app.route('/api/method/channel.searchChannels').get(tokenController.control, channelController.searchChannels)
-	app.route('/api/method/channel.getPosts').get(tokenController.control, channelController.getPosts)
-	app.route('/api/method/channel.createPost').post(tokenController.control, channelController.createPost)
+	//	channels
+	app.route('/api/method/channels.create').post(tokenController.control, channelsController.create)
+	app.route('/api/method/channels.getById').get(tokenController.control, channelsController.getById)
+	app.route('/api/method/channels.get').get(tokenController.control, channelsController.get)
+	app.route('/api/method/channels.search').get(tokenController.control, channelsController.search)
+	app.route('/api/method/channels.editTitle').post(tokenController.control, channelsController.editTitle)
+	app.route('/api/method/channels.editShortLink').post(tokenController.control, channelsController.editShortLink)
+	app.route('/api/method/channels.editCategory').post(tokenController.control, channelsController.editCategory)
+	app.route('/api/method/channels.editDescription').post(tokenController.control, channelsController.editDescription)
 
-	//	post
-	app.route('/api/method/post.editPost').put(tokenController.control, postController.editPost)
-	app.route('/api/method/post.deletePost').delete(tokenController.control, postController.deletePost)
-	app.route('/api/method/post.getComments').get(tokenController.control, postController.getComments)
-	app.route('/api/method/post.createComment').post(tokenController.control, postController.createComment)
+	//	posts
+	app.route('/api/method/posts.create').put(tokenController.control, postsController.create)
+	app.route('/api/method/posts.get').delete(tokenController.control, postsController.get)
+	app.route('/api/method/posts.edit').get(tokenController.control, postsController.edit)
+	app.route('/api/method/posts.delete').post(tokenController.control, postsController.delete)
 
-	//	comment
-	app.route('/api/method/comment.editComment').put(tokenController.control, commentController.editComment)
-	app.route('/api/method/comment.deleteComment').delete(tokenController.control, commentController.deleteComment)
+	//	comments
+	app.route('/api/method/comments.create').put(tokenController.control, commentsController.create)
+	app.route('/api/method/comments.get').delete(tokenController.control, commentsController.get)
+	app.route('/api/method/comments.edit').delete(tokenController.control, commentsController.edit)
+	app.route('/api/method/comments.delete').delete(tokenController.control, commentsController.delete)
 
 }

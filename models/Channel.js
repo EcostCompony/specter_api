@@ -1,6 +1,10 @@
 const { Schema, model } = require('mongoose')
 
-const Subscriber = new Schema({ "admin": Boolean })
+const Subscriber = new Schema({
+	"name": { "type": String, "required": true },
+	"short_link": { "type": String, "required": true },
+	"admin": Boolean
+})
 const Comment = new Schema({
 	"author_id": { "type": String, "required": true },
 	"text": { "type": String, "required": true },

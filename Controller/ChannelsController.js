@@ -5,7 +5,7 @@ const response = require('./../response')
 const User = require('./../models/User')
 const Channel = require('./../models/Channel')
 
-exports.createChannel = async (req, res) => {
+exports.create = async (req, res) => {
 
 	try {
 		var title = req.query.title
@@ -46,7 +46,7 @@ exports.createChannel = async (req, res) => {
 
 }
 
-exports.getChannel = async (req, res) => {
+exports.getById = async (req, res) => {
 
 	try {
 		var channel_id = req.query.channel_id
@@ -69,7 +69,56 @@ exports.getChannel = async (req, res) => {
 
 }
 
-exports.searchChannels = async (req, res) => {
+exports.get = async (req, res) => {
+
+	try {
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		let channels = await Channel.find({ "subscribers._id": req.token_payload.service_id }, 'title short_link category description')
+		return response.send(channels, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.subscribe = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+		var user = await User.findOne({ "_id": req.token_payload.service_id }, "-_id name short_link")
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length != 0) return response.error(112, "already signed", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		let subscriberA = { "name": user.name, "short_link": user.short_link }
+		await Channel.findOneAndUpdate({ "_id": channel_id }, { "$push": { "subscribers": subscriberA } })
+
+		return response.send(subscriberA, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
+exports.search = async (req, res) => {
 
 	try {
 		var search_string = req.query.search_string
@@ -91,73 +140,7 @@ exports.searchChannels = async (req, res) => {
 
 }
 
-exports.getPosts = async (req, res) => {
-
-	try {
-		var channel_id = req.query.channel_id
-
-		let channel = await Channel.findOne({ "_id": channel_id }, 'posts')
-
-		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
-			let error_details = []
-			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
-			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
-			return response.error(3, "invalid access token", error_details, res)
-		}
-		if (!channel_id) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }], res)
-		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
-
-		return response.send(channel.posts, res)
-	} catch (error) {
-		return response.systemError(error, res)
-	}
-
-}
-
-exports.createPost = async (req, res) => {
-
-	try {
-		var channel_id = req.query.channel_id
-		var text = req.query.text
-		// # 1 - канал
-		// # 2 - пользователь
-		var author = req.query.author
-
-		var channel = await Channel.findOne({ "_id": channel_id })
-		var user = await User.findOne({ "_id": req.token_payload.service_id })
-
-		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
-			let error_details = []
-			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
-			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
-			return response.error(3, "invalid access token", error_details, res)
-		}
-		if (!channel_id || !text || !author) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }, { "key": 'text', "value": 'required' }, { "key": 'author', "value": 'required' }], res)
-		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
-
-		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
-		if (subscriber[0]) subscriber = subscriber[0].subscriber
-
-		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (text.trim() == '' || !Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) {
-			let error_details = []
-			if (text.trim() == '') error_details.push({ "key": 'text', "value": text, "regexp": '/./' })
-			if (!Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) error_details.push({ "key": 'author', "value": author, "regexp": '/^[1-2]$/' })
-			return response.error(5, "invalid parameter value", error_details, res)
-		}
-
-		let post = { "author": author == 1 ? channel.title : user.name, "text": text, "datetime": Date.now() }
-		channel.posts.push(post)
-		await channel.save()
-
-		return response.send(post, res)
-	} catch (error) {
-		return response.systemError(error, res)
-	}
-
-}
-
-exports.changeTitle = async (req, res) => {
+exports.editTitle = async (req, res) => {
 
 	try {
 		var channel_id = req.query.channel_id
@@ -190,7 +173,7 @@ exports.changeTitle = async (req, res) => {
 
 }
 
-exports.changeShortLink = async (req, res) => {
+exports.editShortLink = async (req, res) => {
 
 	try {
 		var channel_id = req.query.channel_id
@@ -224,7 +207,7 @@ exports.changeShortLink = async (req, res) => {
 
 }
 
-exports.changeCategory = async (req, res) => {
+exports.editCategory = async (req, res) => {
 
 	try {
 		var channel_id = req.query.channel_id
@@ -257,7 +240,7 @@ exports.changeCategory = async (req, res) => {
 
 }
 
-exports.changeDescription = async (req, res) => {
+exports.editDescription = async (req, res) => {
 
 	try {
 		var channel_id = req.query.channel_id

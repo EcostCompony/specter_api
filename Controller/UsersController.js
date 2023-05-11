@@ -3,7 +3,7 @@
 const response = require('./../response')
 const User = require('./../models/User')
 
-exports.getUserId = async (req, res) => {
+exports.get = async (req, res) => {
 
 	try {
 		var ecost_id = req.query.ecost_id
