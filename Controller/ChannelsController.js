@@ -272,3 +272,33 @@ exports.editDescription = async (req, res) => {
 	}
 
 }
+
+exports.delete = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+
+		var channel = await Channel.findOne({ "_id": channel_id })
+
+		if (req.token_payload.type != 'access' || req.token_payload.service != 'specter') {
+			let error_details = []
+			if (req.token_payload.type != 'access') error_details.push({ "key": 'type', "value": req.token_payload.type, "required": 'access' })
+			if (req.token_payload.service != 'specter') error_details.push({ "key": 'service', "value": req.token_payload.service, "required": 'specter' })
+			return response.error(3, "invalid access token", error_details, res)
+		}
+		if (!channel_id) return response.error(4, "one of the required parameters was not passed", [{ "key": 'channel_id', "value": 'required' }], res)
+		if (!channel) return response.error(110, "not found", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		let subscriber = await Channel.aggregate([{ "$match": { "_id": new mongoose.Types.ObjectId(channel_id) } }, { "$unwind": '$subscribers' }, { "$match": { "subscribers._id": user._id } }, { "$project": { "subscriber": "$subscribers" } }])
+		if (subscriber[0]) subscriber = subscriber[0].subscriber
+
+		if (subscriber.length == 0 || !subscriber.admin) return response.error(111, "no access", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		await Channel.findOneAndRemove({ "_id": channel_id })
+
+		return response.send(channel, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
