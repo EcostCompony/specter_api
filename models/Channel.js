@@ -1,17 +1,17 @@
 const { Schema, model } = require('mongoose')
 
 const Subscriber = new Schema({
-	"user_id": { "type": Number, "unique": true, "required": true },
+	"user_id": { "type": Number, "required": true },
 	"admin": Boolean
 })
 const Comment = new Schema({
-	"id": { "type": Number, "unique": true, "required": true },
+	"id": { "type": Number, "required": true },
 	"author_id": { "type": Number, "required": true },
 	"text": { "type": String, "required": true },
 	"datetime": { "type": Number, "required": true }
 })
 const Post = new Schema({
-	"id": { "type": Number, "unique": true, "required": true },
+	"id": { "type": Number, "required": true },
 	"author": { "type": String, "required": true },
 	"text": { "type": String, "required": true },
 	"datetime": { "type": Number, "required": true },

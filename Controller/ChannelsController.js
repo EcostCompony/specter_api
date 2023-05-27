@@ -12,7 +12,7 @@ exports.create = async (req, res) => {
 		var short_link = req.query.short_link
 		// # 1 - блог
 		// # 2 - новости
-		var category = req.query.category
+		var category = Number(req.query.category)
 		var description = req.query.description
 
 		if (!title || !short_link) return response.error(6, "invalid request", [{ "key": 'title', "value": 'required' }, { "key": 'short_link', "value": 'required' }, { "key": 'category', "value": 'optional' }, { "key": 'description', "value": 'optional' }], res)
@@ -46,7 +46,12 @@ exports.getById = async (req, res) => {
 		if (!channel_id) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
 		if (!channel) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		return response.send(channel, res)
+		let channelSubscriber = await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id}, "subscribers.$")
+		var optionally = {}
+ 		optionally.is_subscriber = channelSubscriber ? 1 : 0
+		if (channelSubscriber) optionally.is_admin = channelSubscriber.subscribers[0].admin ? 1 : 0
+
+		return response.send(Object.assign(channel._doc, optionally), res)
 	} catch (error) {
 		return response.systemError(error, res)
 	}
