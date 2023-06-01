@@ -27,6 +27,7 @@ module.exports = app => {
 	app.route('/api/method/channels.get').all(tokenAccessController, versionsController, channelsController.get)
 	app.route('/api/method/channels.search').all(tokenAccessController, versionsController, channelsController.search)
 	app.route('/api/method/channels.subscribe').all(tokenAccessController, versionsController, channelsController.subscribe)
+	app.route('/api/method/channels.unsubscribe').all(tokenAccessController, versionsController, channelsController.unsubscribe)
 	app.route('/api/method/channels.edit').all(tokenAccessController, versionsController, channelsController.edit)
 	app.route('/api/method/channels.delete').all(tokenAccessController, versionsController, channelsController.delete)
 

@@ -100,6 +100,24 @@ exports.subscribe = async (req, res) => {
 
 }
 
+exports.unsubscribe = async (req, res) => {
+
+	try {
+		var channel_id = req.query.channel_id
+
+		if (!channel_id) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
+		if (!await Channel.findOne({ "id": channel_id })) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (!await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id})) return response.error(301, "the user is not subscribed", [{ "key": 'channel_id', "value": channel_id }], res)
+
+		await Channel.findOneAndUpdate({ "id": channel_id }, { "$pull": { "subscribers": { "user_id": req.token_payload.service_id } } })
+
+		return response.send(1, res)
+	} catch (error) {
+		return response.systemError(error, res)
+	}
+
+}
+
 exports.edit = async (req, res) => {
 
 	try {

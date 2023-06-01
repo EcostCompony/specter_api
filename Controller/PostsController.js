@@ -28,7 +28,7 @@ exports.create = async (req, res) => {
 
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "posts_count": channel.posts_count + 1 })
 
-		let post = { "id": channel.posts_count + 1, "author": author == 1 ? channel.title : await User.findOne({ "_id": req.token_payload.service_id }).name, "text": text, "datetime": Date.now() }
+		let post = { "id": channel.posts_count + 1, "author": author == 1 ? channel.title : await User.findOne({ "id": req.token_payload.service_id }).name, "text": text, "datetime": Date.now() }
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "$push": { "posts": post } })
 
 		return response.send(post, res)
