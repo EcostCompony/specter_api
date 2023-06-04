@@ -24,6 +24,7 @@ const Channel = new Schema({
 	"short_link": { "type": String, "unique": true, "required": true },
 	"category": Number,
 	"description": String,
+	"subscriber_numbers": { "type": Number, "default": 1 },
 	"subscribers": [Subscriber],
 	"posts": [Post],
 	"posts_count": { "type": Number, "default": 0, "required": true }

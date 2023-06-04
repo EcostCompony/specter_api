@@ -61,7 +61,14 @@ exports.getById = async (req, res) => {
 exports.get = async (req, res) => {
 
 	try {
-		return response.send(await Channel.find({ "subscribers.user_id": req.token_payload.service_id }, '-_id id title short_link category description'), res)
+		var channels = await Channel.find({ "subscribers.user_id": req.token_payload.service_id }, '-_id id title short_link category description subscriber_numbers')
+
+		for (let i in channels) {
+			let posts = (await Channel.findOne({ "id": channels[i].id }, "-_id posts")).posts
+			channels[i].body = posts.length == 0 ? '%CHANNEL_CREATED%' : posts[posts.length - 1].text
+		}
+
+		return response.send(channels.map(item => ({ "id": item.id, "title": item.title, "short_link": item.short_link, "category": item.category, "description": item.description, "body": item.body })), res)
 	} catch (error) {
 		return response.systemError(error, res)
 	}
@@ -89,9 +96,9 @@ exports.subscribe = async (req, res) => {
 
 		if (!channel_id) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
 		if (!await Channel.findOne({ "id": channel_id })) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id})) return response.error(300, "the user is already subscribed", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id })) return response.error(300, "the user is already subscribed", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		await Channel.findOneAndUpdate({ "id": channel_id }, { "$push": { "subscribers": { "user_id": req.token_payload.service_id } } })
+		await Channel.findOneAndUpdate({ "id": channel_id }, { "$inc": { "subscriber_numbers": 1 }, "$push": { "subscribers": { "user_id": req.token_payload.service_id } } })
 
 		return response.send(1, res)
 	} catch (error) {
@@ -107,9 +114,9 @@ exports.unsubscribe = async (req, res) => {
 
 		if (!channel_id) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
 		if (!await Channel.findOne({ "id": channel_id })) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (!await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id})) return response.error(301, "the user is not subscribed", [{ "key": 'channel_id', "value": channel_id }], res)
+		if (!await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id })) return response.error(301, "the user is not subscribed", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		await Channel.findOneAndUpdate({ "id": channel_id }, { "$pull": { "subscribers": { "user_id": req.token_payload.service_id } } })
+		await Channel.findOneAndUpdate({ "id": channel_id }, { "$inc": { "subscriber_numbers": -1 }, "$pull": { "subscribers": { "user_id": req.token_payload.service_id } } })
 
 		return response.send(1, res)
 	} catch (error) {
@@ -124,7 +131,7 @@ exports.edit = async (req, res) => {
 		var channel_id = req.query.channel_id
 		var title = req.query.title
 		var short_link = req.query.short_link
-		var category = req.query.category
+		var category = Number(req.query.category)
 		var description = req.query.description
 
 		if (!channel_id || !title && !short_link && !category && !description) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'title', "value": 'required|optional' }, { "key": 'short_link', "value": 'required|optional' }, { "key": 'category', "value": 'required|optional' }, { "key": 'description', "value": 'required|optional' }], res)

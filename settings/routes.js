@@ -10,6 +10,7 @@ module.exports = app => {
 	const postsController = require('./../Controller/PostsController')
 	const commentsController = require('./../Controller/CommentsController')
 	const subscribersController = require('./../Controller/SubscribersController')
+	const utilsController = require('./../Controller/UtilsController')
 
 	//	auth
 	app.route('/api/method/auth').all(require('./../Controller/TokenAuthController'), versionsController, require('./../Controller/AuthController'))
@@ -47,6 +48,9 @@ module.exports = app => {
 	app.route('/api/method/subscribers.get').all(tokenAccessController, versionsController, subscribersController.get)
 	app.route('/api/method/subscribers.search').all(tokenAccessController, versionsController, subscribersController.search)
 	app.route('/api/method/subscribers.setAdmin').all(tokenAccessController, versionsController, subscribersController.setAdmin)
+
+	//	utils
+	app.route('/api/method/utils.getAndroidAppMinimumSupportedVersionCode').all(versionsController, utilsController.getAndroidAppMinimumSupportedVersionCode)
 
 	app.all('*', (req, res, next) => {
 

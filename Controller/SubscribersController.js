@@ -69,7 +69,7 @@ exports.setAdmin = async (req, res) => {
 		if (!channelSubscriber) return response.error(50, "not exist", [{ "key": 'user_id', "value": user_id }], res)
 		if (channelSubscriber.subscribers[0].admin) return response.error(600, "the user is already an admin", [{ "key": 'user_id', "value": user_id }], res)
 
-		await Channel.findOneAndUpdate({ "id": channel_id, "subscribers.id": user_id }, { "$set": { "subscribers.$.admin": true } })
+		await Channel.findOneAndUpdate({ "id": channel_id, "subscribers.user_id": user_id }, { "$set": { "subscribers.$.admin": true } })
 
 		return response.send(1, res)
 	} catch (error) {
