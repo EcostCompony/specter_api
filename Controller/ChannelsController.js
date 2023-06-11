@@ -16,10 +16,10 @@ exports.create = async (req, res) => {
 		var description = req.query.description
 
 		if (!title || !short_link) return response.error(6, "invalid request", [{ "key": 'title', "value": 'required' }, { "key": 'short_link', "value": 'required' }, { "key": 'category', "value": 'optional' }, { "key": 'description', "value": 'optional' }], res)
-		if (title.length > 32 || !short_link.match(/^[a-z0-9_.]{3,32}$/i) || category && (!Number.isInteger(category) || category < 1 || category > 2) || description && description.length > 256) {
+		if (title.length > 64 || !short_link.match(/^[a-z0-9_.]{4,32}$/i) || category && (!Number.isInteger(category) || category < 1 || category > 2) || description && description.length > 256) {
 			let error_details = []
-			if (title.length > 32) error_details.push({ "key": 'title', "value": title, "regex": '/^.{1,32}$/' })
-			if (!short_link.match(/^[a-z0-9_.]{3,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regex": '/^[a-z0-9_.]{3,32}$/i' })
+			if (title.length > 64) error_details.push({ "key": 'title', "value": title, "regex": '/^.{1,64}$/' })
+			if (!short_link.match(/^[a-z0-9_.]{4,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regex": '/^[a-z0-9_.]{4,32}$/i' })
 			if (category && (!Number.isInteger(category) || category < 1 || category > 2)) error_details.push({ "key": 'category', "value": category, "regex": '/^[1-2]$/' })
 			if (description && description.length > 256) error_details.push({ "key": 'description', "value": description, "regex": '/^.{1,256}$/' })
 			return response.error(7, "invalid parameter value", error_details, res)
@@ -68,7 +68,7 @@ exports.get = async (req, res) => {
 			channels[i].body = posts.length == 0 ? '%CHANNEL_CREATED%' : posts[posts.length - 1].text
 		}
 
-		return response.send(channels.map(item => ({ "id": item.id, "title": item.title, "short_link": item.short_link, "category": item.category, "description": item.description, "body": item.body })), res)
+		return response.send(channels.map(item => ({ "id": item.id, "title": item.title, "short_link": item.short_link, "category": item.category, "description": item.description, "subscriber_numbers": item.subscriber_numbers, "body": item.body })), res)
 	} catch (error) {
 		return response.systemError(error, res)
 	}
@@ -138,10 +138,10 @@ exports.edit = async (req, res) => {
 		if (!await Channel.findOne({ "id": channel_id })) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channel = await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id}, "subscribers.$")
 		if (!channel || !channel.subscribers[0].admin) return response.error(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (title && title.length > 32 || short_link && !short_link.match(/^[a-z0-9_.]{3,32}$/i) || category && (!Number.isInteger(category) || category < 1 || category > 2) || description && description.length > 256) {
+		if (title && title.length > 64 || short_link && !short_link.match(/^[a-z0-9_.]{4,32}$/i) || category && (!Number.isInteger(category) || category < 1 || category > 2) || description && description.length > 256) {
 			let error_details = []
-			if (title && title.length > 32) error_details.push({ "key": 'title', "value": title, "regex": '/^.{1,32}$/' })
-			if (short_link && !short_link.match(/^[a-z0-9_.]{3,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regex": '/^[a-z0-9_.]{3,32}$/i' })
+			if (title && title.length > 64) error_details.push({ "key": 'title', "value": title, "regex": '/^.{1,64}$/' })
+			if (short_link && !short_link.match(/^[a-z0-9_.]{4,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regex": '/^[a-z0-9_.]{4,32}$/i' })
 			if (category && (!Number.isInteger(category) || category < 1 || category > 2)) error_details.push({ "key": 'category', "value": category, "regex": '/^[1-2]$/' })
 			if (description && description.length > 256) error_details.push({ "key": 'description', "value": description, "regex": '/^.{1,256}$/' })
 			return response.error(7, "invalid parameter value", error_details, res)

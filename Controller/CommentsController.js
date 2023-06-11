@@ -2,6 +2,7 @@
 
 const response = require('./../response')
 const Channel = require('./../models/Channel')
+const User = require('./../models/User')
 
 exports.create = async (req, res) => {
 
@@ -40,7 +41,9 @@ exports.get = async (req, res) => {
 		var channelPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts')
 		if (!channelPost) return response.error(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 
-		return response.send(channelPost.posts[0].comments.map((item) => ({ "id": item.id, "author_id": item.author_id, "text": item.text, "datetime": item.datetime })), res)
+		for (let i in channelPost.posts[0].comments) channelPost.posts[0].comments[i].author_name = (await User.findOne({ "id": channelPost.posts[0].comments[i].author_id }, '-_id name')).name
+
+		return response.send(channelPost.posts[0].comments.map((item) => ({ "id": item.id, "author_id": item.author_id, "author_name": item.author_name, "text": item.text, "datetime": item.datetime })), res)
 	} catch (error) {
 		return response.systemError(error, res)
 	}
