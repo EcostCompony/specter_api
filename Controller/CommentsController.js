@@ -89,7 +89,7 @@ exports.delete = async (req, res) => {
 		let comment = await Channel.aggregate([{ "$match": { "id": Number(channel_id) } }, { "$unwind": '$posts' }, { "$match": { "posts.id": Number(post_id) } }, { "$unwind": '$posts.comments' }, { "$match": { "posts.comments.id": Number(comment_id) } }, { "$project": { "comment": "$posts.comments" } }])
 		if (comment[0]) comment = comment[0].comment
 		if (!comment.id) return response.error(50, "not exist", [{ "key": 'comment_id', "value": comment_id }], res)
-		if (comment.author_id != req.token_payload.service_id) return response.error(8, "access denied", [{ "key": 'comment_id', "value": comment_id }], res)
+		if (comment.author_id != req.token_payload.service_id && !(await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id}, "subscribers.$")).subscribers[0].admin) return response.error(8, "access denied", [{ "key": 'comment_id', "value": comment_id }], res)
 
 		await Channel.findOneAndUpdate({ "id": channel_id, "posts.id": post_id }, { "$pull": { "posts.$.comments": { "id": comment_id } } });
 
