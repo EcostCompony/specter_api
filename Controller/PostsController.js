@@ -21,14 +21,14 @@ exports.create = async (req, res) => {
 		if (!channelSubscriber || !channelSubscriber.subscribers[0].admin) return response.error(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (text.trim() == '' || !Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) {
 			let error_details = []
-			if (text.trim() == '') error_details.push({ "key": 'text', "value": text, "regex": '/./' })
-			if (!Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) error_details.push({ "key": 'author', "value": author, "regex": '/^[1-2]$/' })
+			if (text.trim() == '') error_details.push({ "key": 'text', "value": text, "requirement": '/./' })
+			if (!Number.isInteger(Number(author)) || Number(author) < 1 || Number(author) > 2) error_details.push({ "key": 'author', "value": author, "requirement": '/^[1-2]$/' })
 			return response.error(7, "invalid parameter value", error_details, res)
 		}
 
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "posts_count": channel.posts_count + 1 })
 
-		let post = { "id": channel.posts_count + 1, "author": author == 1 ? channel.title : await User.findOne({ "id": req.token_payload.service_id }).name, "text": text, "datetime": Date.now() }
+		let post = { "id": channel.posts_count + 1, "author": author == 1 ? channel.title : (await User.findOne({ "id": req.token_payload.service_id })).name, "text": text, "datetime": Date.now() }
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "$push": { "posts": post } })
 
 		return response.send(post, res)
@@ -66,7 +66,7 @@ exports.edit = async (req, res) => {
 		let channelSubscriber = await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id}, "subscribers.$")
 		if (!channelSubscriber || !channelSubscriber.subscribers[0].admin) return response.error(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts')) return response.error(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
-		if (text.trim() == '') return response.error(7, "invalid parameter value", [{ "key": 'text', "value": text, "regex": '/./' }], res)
+		if (text.trim() == '') return response.error(7, "invalid parameter value", [{ "key": 'text', "value": text, "requirement": '/./' }], res)
 
 		await Channel.findOneAndUpdate({ "id": channel_id, "posts.id": post_id }, { "$set": { "posts.$.text": text} })
 

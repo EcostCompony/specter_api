@@ -14,10 +14,11 @@ module.exports = async (req, res) => {
 
 		if (!name || !short_link) return response.error(6, "invalid request", [{ "key": 'name', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)
 		if (await User.findOne({ "ecost_id": ecost_id })) return response.error(1001, "the user is already registered", [{ "key": 'ecost_id', "value": ecost_id }], res)
-		if (name.length > 64 || !short_link.match(/^[a-z\d\_\.]{4,32}$/i)) {
+		if (name.length > 64 || !short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i) || short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) {
 			let error_details = []
-			if (name.length > 64) error_details.push({ "key": 'name', "value": name, "regex": '/^.{1,64}$/' })
-			if (!short_link.match(/^[a-z\d\_\.]{4,32}$/i)) error_details.push({ "key": 'short_link', "value": short_link, "regex": '/^[a-z\\d\\_\\.]{4,32}$/i' })
+			if (name.length > 64) error_details.push({ "key": 'name', "value": name, "requirement": '/^.{1,64}$/' })
+			if (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i)) error_details.push({ "key": 'short_link', "value": short_link, "requirement": '/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i' })
+			else if (short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) error_details.push({ "key": 'short_link', "value": short_link, "requirement": "short_link.replaceAll(/[a-z]/ig,'').length/short_link.length*100<=40" })
 			return response.error(7, "invalid parameter value", error_details, res)
 		}
 		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.error(51, "already in use", [{ "key": 'short_link', "value": short_link }], res)
