@@ -13,7 +13,7 @@ exports.create = async (req, res) => {
 
 		if (!channel_id || !post_id || !text) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
 		if (!await Channel.findOne({ "id": channel_id }, '_id')) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
-		var channelPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts')
+		var channelPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts.$')
 		if (!channelPost) return response.error(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 		if (text.trim() == '') return response.error(7, "invalid parameter value", [{ "key": 'text', "value": text, "requirement": '/./' }], res)
 
@@ -38,7 +38,7 @@ exports.get = async (req, res) => {
 
 		if (!channel_id || !post_id) return response.error(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }], res)
 		if (!await Channel.findOne({ "id": channel_id }, '_id')) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
-		var channelPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts')
+		var channelPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts.$')
 		if (!channelPost) return response.error(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 
 		for (let i in channelPost.posts[0].comments) channelPost.posts[0].comments[i].author_name = (await User.findOne({ "id": channelPost.posts[0].comments[i].author_id }, '-_id name')).name

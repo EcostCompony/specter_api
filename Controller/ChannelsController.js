@@ -27,7 +27,7 @@ exports.create = async (req, res) => {
 		}
 		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.error(51, "already in use", [{ "key": 'short_link', "value": short_link }], res)
 
-		let channel = new Channel({ "id": await sequenceController.getNextSequence('channels'), "title": title, "short_link": short_link, "subscribers": [{ "user_id": req.token_payload.service_id, "admin": 1 }], "category": category, "description": description})
+		let channel = new Channel({ "id": await sequenceController.getNextSequence('channels'), "title": title, "short_link": short_link, "subscribers": [{ "user_id": req.token_payload.service_id, "admin": 1 }], "category": category == null ? 0 : category, "description": description == null ? "" : description })
 		await channel.save()
 
 		return response.send({ "id": channel.id, "title": channel.title, "short_link": channel.short_link, "category": channel.category, "description": channel.description }, res)
@@ -139,12 +139,12 @@ exports.edit = async (req, res) => {
 		if (!await Channel.findOne({ "id": channel_id })) return response.error(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channel = await Channel.findOne({ "id": channel_id, "subscribers.user_id": req.token_payload.service_id}, "subscribers.$")
 		if (!channel || !channel.subscribers[0].admin) return response.error(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (title && title.length > 64 || short_link && (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i) || short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) || category && (!Number.isInteger(category) || category < 1 || category > 2) || description && description.length > 256) {
+		if (title && title.length > 64 || short_link && (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i) || short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) || category && (!Number.isInteger(category) || category < 0 || category > 2) || description && description.length > 256) {
 			let error_details = []
 			if (title && title.length > 64) error_details.push({ "key": 'title', "value": title, "requirement": '/^.{1,64}$/' })
 			if (short_link && !short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i)) error_details.push({ "key": 'short_link', "value": short_link, "requirement": '/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i' })
 			else if (short_link && short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) error_details.push({ "key": 'short_link', "value": short_link, "requirement": "short_link.replaceAll(/[a-z]/ig,'').length/short_link.length*100<=40" })
-			if (category && (!Number.isInteger(category) || category < 1 || category > 2)) error_details.push({ "key": 'category', "value": category, "requirement": '/^[1-2]$/' })
+			if (category && (!Number.isInteger(category) || category < 0 || category > 2)) error_details.push({ "key": 'category', "value": category, "requirement": '/^[1-2]$/' })
 			if (description && description.length > 256) error_details.push({ "key": 'description', "value": description, "requirement": '/^.{1,256}$/' })
 			return response.error(7, "invalid parameter value", error_details, res)
 		}
@@ -153,7 +153,7 @@ exports.edit = async (req, res) => {
 		if (title) await Channel.findOneAndUpdate({ "id": channel_id }, { "title": title })
 		if (short_link) await Channel.findOneAndUpdate({ "id": channel_id }, { "short_link": short_link })
 		if (category) await Channel.findOneAndUpdate({ "id": channel_id }, { "category": category })
-		if (description) await Channel.findOneAndUpdate({ "id": channel_id }, { "description": description })
+		if (description) await Channel.findOneAndUpdate({ "id": channel_id }, { "description": description == " " ? "" : description })
 
 		return response.send(1, res)
 	} catch (error) {
