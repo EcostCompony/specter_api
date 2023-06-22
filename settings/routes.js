@@ -2,25 +2,25 @@
 
 module.exports = app => {
 
-	const tokenAccessController = require('./../Controller/TokenAccessController')
 	const versionsController = require('./../Controller/VersionsController')
-	const accountController = require('./../Controller/AccountController')
-	const usersController = require('./../Controller/UsersController')
-	const channelsController = require('./../Controller/ChannelsController')
-	const postsController = require('./../Controller/PostsController')
-	const commentsController = require('./../Controller/CommentsController')
-	const subscribersController = require('./../Controller/SubscribersController')
-	const utilsController = require('./../Controller/UtilsController')
+	const tokenAccessController = require('./../Controller/TokenAccessController')
+	const tokenAuthController = require('./../Controller/TokenAuthController')
 
-	//	auth
-	app.route('/api/method/auth').all(require('./../Controller/TokenAuthController'), versionsController, require('./../Controller/AuthController'))
+	const accountController = require('./../Controller/AccountController')
+	const authController = require('./../Controller/AuthController')
+	const channelsController = require('./../Controller/ChannelsController')
+	const commentsController = require('./../Controller/CommentsController')
+	const postsController = require('./../Controller/PostsController')
+	const subscribersController = require('./../Controller/SubscribersController')
+	const usersController = require('./../Controller/UsersController')
+	const utilsController = require('./../Controller/UtilsController')
 
 	//	account
 	app.route('/api/method/account.get').all(tokenAccessController, versionsController, accountController.get)
 	app.route('/api/method/account.edit').all(tokenAccessController, versionsController, accountController.edit)
 
-	//	users
-	app.route('/api/method/users.get').all(versionsController, usersController.get)
+	//	auth
+	app.route('/api/method/auth').all(tokenAuthController, versionsController, authController)
 
 	//	channels
 	app.route('/api/method/channels.create').all(tokenAccessController, versionsController, channelsController.create)
@@ -32,34 +32,37 @@ module.exports = app => {
 	app.route('/api/method/channels.edit').all(tokenAccessController, versionsController, channelsController.edit)
 	app.route('/api/method/channels.delete').all(tokenAccessController, versionsController, channelsController.delete)
 
-	//	posts
-	app.route('/api/method/posts.create').all(tokenAccessController, versionsController, postsController.create)
-	app.route('/api/method/posts.get').all(tokenAccessController, versionsController, postsController.get)
-	app.route('/api/method/posts.edit').all(tokenAccessController, versionsController, postsController.edit)
-	app.route('/api/method/posts.delete').all(tokenAccessController, versionsController, postsController.delete)
-
 	//	comments
 	app.route('/api/method/comments.create').all(tokenAccessController, versionsController, commentsController.create)
 	app.route('/api/method/comments.get').all(tokenAccessController, versionsController, commentsController.get)
 	app.route('/api/method/comments.edit').all(tokenAccessController, versionsController, commentsController.edit)
 	app.route('/api/method/comments.delete').all(tokenAccessController, versionsController, commentsController.delete)
 
+	//	posts
+	app.route('/api/method/posts.create').all(tokenAccessController, versionsController, postsController.create)
+	app.route('/api/method/posts.get').all(tokenAccessController, versionsController, postsController.get)
+	app.route('/api/method/posts.edit').all(tokenAccessController, versionsController, postsController.edit)
+	app.route('/api/method/posts.delete').all(tokenAccessController, versionsController, postsController.delete)
+
 	//	subscribers
 	app.route('/api/method/subscribers.get').all(tokenAccessController, versionsController, subscribersController.get)
 	app.route('/api/method/subscribers.search').all(tokenAccessController, versionsController, subscribersController.search)
 	app.route('/api/method/subscribers.setAdmin').all(tokenAccessController, versionsController, subscribersController.setAdmin)
 
+	//	users
+	app.route('/api/method/users.get').all(versionsController, usersController.get)
+
 	//	utils
 	app.route('/api/method/utils.getAndroidAppMinimumSupportedVersionCode').all(versionsController, utilsController.getAndroidAppMinimumSupportedVersionCode)
 
-	app.all('*', (req, res, next) => {
+	app.all('*', (req, res) => {
 
 		const response = require('./../response')
 
 		try {
-			return response.error(2, "not found", [{ "key": 'URL', "value": req.originalUrl }], res)
+			return response.sendError(2, "not found", res)
 		} catch (error) {
-			return response.systemError(error, res)
+			return response.sendSystemError(error, res)
 		}
 
 	})

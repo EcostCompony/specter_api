@@ -1,21 +1,3 @@
 # Документация API
-## Вид запросов
 
-## Коды ошибок
-_1_    unknown error ***(неизвестная ошибка, попробуйте позже)***
-_2_    not found ***(метод не найден)***
-_3_    the access token was not transferred ***(следует передать токен доступа)***
-_4_    invalid access token ***(неверный токен доступа)***
-_6_    invalid request ***(убедитесь, что запрос верный и обязательные параметры были переданы)***
-_7_    invalid parameter value ***(недопустимое значение параметра)***
-_8_    access denied ***(доступ запрещен)***
-
-_50_    not exist ***(не обнаружено)***
-_51_    already in use ***(одно из значений параметров уже где-то или кем-то используется)***
-
-_300_    the user is already subscribed ***(такой пользователь уже подписан на данный канал)***
-
-_600_    the user is already an admin ***(пользователь уже является администратором)***
-
-_1000_    the user is not registered ***(такой пользователь не зарегистрирован в specter)***
-_1001_    the user is already registered ***(такой пользователь уже зарегистрирован в specter)***
+### [Прочитать документацию API](https://github.com/EcostCompony/specter_api_documentation)

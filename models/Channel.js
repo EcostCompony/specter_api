@@ -2,7 +2,7 @@ const { Schema, model } = require('mongoose')
 
 const Subscriber = new Schema({
 	"user_id": { "type": Number, "required": true },
-	"admin": Boolean
+	"is_admin": { "type": Number, "default": 0, "required": true }
 })
 const Comment = new Schema({
 	"id": { "type": Number, "required": true },
@@ -12,22 +12,22 @@ const Comment = new Schema({
 })
 const Post = new Schema({
 	"id": { "type": Number, "required": true },
-	"author": { "type": String, "required": true },
+	"author_id": { "type": String, "required": true },
 	"text": { "type": String, "required": true },
 	"datetime": { "type": Number, "required": true },
-	"comments": [Comment],
-	"comments_count": { "type": Number, "default": 0, "required": true }
+	"comments_count": { "type": Number, "default": 0, "required": true },
+	"comments": [Comment]
 })
 const Channel = new Schema({
 	"id": { "type": Number, "unique": true, "required": true },
 	"title": { "type": String, "required": true },
 	"short_link": { "type": String, "unique": true, "required": true },
-	"category": Number,
+	"category": { "type": Number, "required": true },
 	"description": String,
-	"subscriber_numbers": { "type": Number, "default": 1 },
+	"subscribers_count": { "type": Number, "default": 1, "required": true },
+	"posts_count": { "type": Number, "default": 0, "required": true },
 	"subscribers": [Subscriber],
-	"posts": [Post],
-	"posts_count": { "type": Number, "default": 0, "required": true }
+	"posts": [Post]
 })
 
 module.exports = model('Channel', Channel)

@@ -6,9 +6,10 @@ module.exports = (req, res, next) => {
 
 	try {
 		let v = req.query.v
-		return !v || v !== '1.0' ? response.error(6, "invalid request", [{ "key": 'v', "value": v ? v : 'required' }], res) : next()
+
+		return !v || v !== '1.0' ? response.sendDetailedError(6, "invalid request", [{ "key": 'v', "value": v ? v : 'required' }], res) : next()
 	} catch (error) {
-		return response.systemError(error, res)
+		return response.sendSystemError(error, res)
 	}
 
 }

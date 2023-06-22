@@ -8,7 +8,7 @@ exports.getAndroidAppMinimumSupportedVersionCode = async (req, res) => {
 	try {
 		return response.send({ "value": (await Value.findOne({ "key": 'ANDROID_APP_MINIMUM_SUPPORTED_VERSION_CODE' })).value }, res)
 	} catch (error) {
-		return response.systemError(error, res)
+		return response.sendSystemError(error, res)
 	}
 
 }

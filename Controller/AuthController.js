@@ -8,20 +8,19 @@ module.exports = async (req, res) => {
 	const Channel = require('./../models/Channel')
 
 	try {
-		var name = req.query.name
-		var short_link = req.query.short_link
+		var name = req.query.name.trim()
+		var short_link = req.query.short_link.trim()
 		var ecost_id = req.token_payload.ecost_id
 
-		if (!name || !short_link) return response.error(6, "invalid request", [{ "key": 'name', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)
-		if (await User.findOne({ "ecost_id": ecost_id })) return response.error(1001, "the user is already registered", [{ "key": 'ecost_id', "value": ecost_id }], res)
-		if (name.length > 64 || !short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i) || short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) {
+		if (!name || !short_link) return response.sendDetailedError(6, "invalid request", [{ "key": 'name', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)
+		if (await User.findOne({ "ecost_id": ecost_id })) return response.sendError(1001, "the user is already registered", res)
+		if (name.length > 64 || !short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/) || short_link.replaceAll(/[a-z\d]/g, '').length / short_link.length > 0.4) {
 			let error_details = []
-			if (name.length > 64) error_details.push({ "key": 'name', "value": name, "requirement": '/^.{1,64}$/' })
-			if (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i)) error_details.push({ "key": 'short_link', "value": short_link, "requirement": '/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/i' })
-			else if (short_link.replaceAll(/[a-z]/ig, '').length / short_link.length * 100 > 40) error_details.push({ "key": 'short_link', "value": short_link, "requirement": "short_link.replaceAll(/[a-z]/ig,'').length/short_link.length*100<=40" })
-			return response.error(7, "invalid parameter value", error_details, res)
+			if (name.length > 64) error_details.push({ "key": 'name', "value": name })
+			if (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/) || short_link.replaceAll(/[a-z\d]/g, '').length / short_link.length > 0.4) error_details.push({ "key": 'short_link', "value": short_link })
+			return response.sendDetailedError(7, "invalid parameter value", error_details, res)
 		}
-		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.error(51, "already in use", [{ "key": 'short_link', "value": short_link }], res)
+		if (await User.findOne({ "short_link": short_link }) || await Channel.findOne({ "short_link": short_link })) return response.sendDetailedError(51, "already in use", [{ "key": 'short_link', "value": short_link }], res)
 
 		let specter_id = await sequenceController.getNextSequence('users')
 		await new User({ "id": specter_id, "name": name, "short_link": short_link, "ecost_id": ecost_id }).save()
@@ -35,7 +34,7 @@ module.exports = async (req, res) => {
 
 		return response.send({ "access_token": `Bearer ${access_token}` }, res)
 	} catch (error) {
-		return response.systemError(error, res)
+		return response.sendSystemError(error, res)
 	}
 
 }

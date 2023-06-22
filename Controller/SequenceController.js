@@ -1,11 +1,15 @@
 'use strict'
 
-const Sequence = require('./../models/Sequence')
 
-exports.getNextSequence = async (table) => {
+exports.getNextSequence = async (table, res) => {
 
-	var seq = await Sequence.findOne({ "table": table })
-	await Sequence.findOneAndUpdate({ "table": table }, { "count": seq.count + 1 })
-	return seq.count + 1
+	const response = require('./../response')
+	const Sequence = require('./../models/Sequence')
+
+	try {
+		return (await Sequence.findOneAndUpdate({ "table": table }, { "$inc": { "count": 1 } })).count
+	} catch (error) {
+		return response.sendSystemError(error, res)
+	}
 
 }
