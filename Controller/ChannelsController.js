@@ -8,10 +8,10 @@ const User = require('./../models/User')
 exports.create = async (req, res) => {
 
 	try {
-		var title = req.query.title.trim()
-		var short_link = req.query.short_link.trim()
+		var title = req.query.title ? req.query.title.trim() : null
+		var short_link = req.query.short_link ? req.query.short_link.trim() : null
 		var category = Number(req.query.category)
-		var description = req.query.description.trim()
+		var description = req.query.description ? req.query.description.trim() : null
 
 		if (!title || !short_link) return response.sendDetailedError(6, "invalid request", [{ "key": 'title', "value": 'required' }, { "key": 'short_link', "value": 'required' }, { "key": 'category', "value": 'optional' }, { "key": 'description', "value": 'optional' }], res)
 		if (title.length > 64 || !short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/) || short_link.replaceAll(/[a-z\d]/g, '').length / short_link.length > 0.4 || category && (category < 0 || category > 2) || description && description.length > 256) {
@@ -99,7 +99,7 @@ exports.get = async (req, res) => {
 exports.search = async (req, res) => {
 
 	try {
-		var q = req.query.q.trim()
+		var q = req.query.q ? req.query.q.trim() : null
 		var id = req.token_payload.service_id
 
 		if (!q) return response.sendDetailedError(6, "invalid request", [{ "key": 'q', "value": 'required' }], res)
@@ -165,10 +165,10 @@ exports.edit = async (req, res) => {
 
 	try {
 		var channel_id = Number(req.query.channel_id)
-		var title = req.query.title.trim()
-		var short_link = req.query.short_link.trim()
+		var title = req.query.title ? req.query.title.trim() : null
+		var short_link = req.query.short_link ? req.query.short_link.trim() : null
 		var category = Number(req.query.category)
-		var description = req.query.description.trim()
+		var description = req.query.description ? req.query.description.trim() : null
 		var id = req.token_payload.service_id
 
 		if (!channel_id || !title && !short_link && !category && category !== 0 && !description) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'title', "value": 'optional*' }, { "key": 'short_link', "value": 'optional*' }, { "key": 'category', "value": 'optional*' }, { "key": 'description', "value": 'optional*' }], res)

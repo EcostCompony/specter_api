@@ -17,8 +17,8 @@ exports.get = async (req, res) => {
 exports.edit = async (req, res) => {
 
 	try {
-		var name = req.query.name.trim()
-		var short_link = req.query.short_link.trim()
+		var name = req.query.name ? req.query.name.trim() : null
+		var short_link = req.query.short_link ? req.query.short_link.trim() : null
 		var id = req.token_payload.service_id
 
 		if (!name && !short_link) return response.sendDetailedError(6, "invalid request", [{ "key": 'name', "value": 'optional*' }, { "key": 'short_link', "value": 'optional*' }], res)

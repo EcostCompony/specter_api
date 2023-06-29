@@ -32,7 +32,7 @@ exports.search = async (req, res) => {
 
 	try {
 		var channel_id = Number(req.query.channel_id)
-		var q = req.query.q.trim()
+		var q = req.query.q ? req.query.q.trim() : req.query.q
 		var id = req.token_payload.service_id
 
 		if (!channel_id || !q) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'q', "value": 'required' }], res)

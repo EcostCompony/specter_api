@@ -8,8 +8,8 @@ module.exports = async (req, res) => {
 	const Channel = require('./../models/Channel')
 
 	try {
-		var name = req.query.name.trim()
-		var short_link = req.query.short_link.trim()
+		var name = req.query.name ? req.query.name.trim() : null
+		var short_link = req.query.short_link ? req.query.short_link.trim() : null
 		var ecost_id = req.token_payload.ecost_id
 
 		if (!name || !short_link) return response.sendDetailedError(6, "invalid request", [{ "key": 'name', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)

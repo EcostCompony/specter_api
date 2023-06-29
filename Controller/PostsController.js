@@ -9,7 +9,7 @@ exports.create = async (req, res) => {
 	try {
 		var channel_id = Number(req.query.channel_id)
 		var author = Number(req.query.author)
-		var text = req.query.text.trim()
+		var text = req.query.text ? req.query.text.trim() : null
 		var id = req.token_payload.service_id
 
 		if (!channel_id || !author || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'author', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
@@ -67,7 +67,7 @@ exports.edit = async (req, res) => {
 	try {
 		var channel_id = Number(req.query.channel_id)
 		var post_id = Number(req.query.post_id)
-		var text = req.query.text.trim()
+		var text = req.query.text ? req.query.text.trim() : null
 		var id = req.token_payload.service_id
 
 		if (!channel_id || !post_id || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
