@@ -27,15 +27,7 @@ exports.create = async (req, res) => {
 
 		await Channel.findOneAndUpdate({ "id": channel_id, "posts.id": post_id }, { "$inc": { "posts.$.comments_count": 1 }, "$push": { "posts.$.comments": comment } })
 
-		return response.send({
-			"id": comment.id,
-			"author": {
-				"id": id,
-				"name": (await User.findOne({ "id": id })).name
-			},
-			"text": comment.text,
-			"datetime": comment.datetime
-		}, res)
+		return response.send(comment, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
@@ -55,11 +47,7 @@ exports.get = async (req, res) => {
 		if (!channelWithPost) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 		var comments = channelWithPost.posts[0].comments
 
-		for (let i in comments) {
-			delete comments[i]._doc._id
-			comments[i]._doc.author = { "id": comments[i]._doc.author_id, "name": (await User.findOne({ "id": comments[i]._doc.author_id })).name }
-			delete comments[i]._doc.author_id
-		}
+		for (let i in comments) delete comments[i]._doc._id
 
 		return response.send(comments, res)
 	} catch (error) {

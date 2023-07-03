@@ -16,12 +16,7 @@ exports.get = async (req, res) => {
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user_id": id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		for (let i in channelWithSubscribers.subscribers) {
-			let user = await User.findOne({ "id": channelWithSubsriber.subscribers[i].user_id })
-			channelWithSubscribers.subscribers[i].user = { "id": channelWithSubscribers.subscribers[i].user_id, "name": user.name, "short_link": user.short_link }
-		}
-
-		return response.send(channelWithSubscribers.subscribers.map(item => ({ "user": item.user, "is_admin": item.is_admin })), res)
+		return response.send(channelWithSubscribers.subscribers.map(item => ({ "user_id": item.user_id, "is_admin": item.is_admin })), res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

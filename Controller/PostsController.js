@@ -27,15 +27,7 @@ exports.create = async (req, res) => {
 		let post = { "id": channelWithPostsCount.posts_count + 1, "author_id": author === 1 ? 0 : id, "text": text, "datetime": Date.now() } 
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "$push": { "posts": post } })
 
-		return response.send({
-			"id": post.id,
-			"author": {
-				"id": post.author_id,
-				"name": post.author_id == 0 ? (await Channel.findOne({ "id": channel_id }, 'title')).title : (await User.findOne({ "id": author_id }, 'name').name)
-			},
-			"text": post.text,
-			"datetime": post.datetime
-		}, res)
+		return response.send(post, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
@@ -53,9 +45,7 @@ exports.get = async (req, res) => {
 		var channelWithPosts = await Channel.findOne({ "id": channel_id }, 'title posts')
 		if (!channelWithPosts) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		for (let i in channelWithPosts.posts) channelWithPosts.posts[i].author = { "id": channelWithPosts.posts[i].author_id, "name": channelWithPosts.posts[i].author_id === 0 ? channelWithPosts.title : (await User.findOne({ "id": id })).name }
-
-		return response.send(channelWithPosts.posts.map(item => ({ "id": item.id, "author": item.author, "text": item.text, "datetime": item.datetime })), res)
+		return response.send(channelWithPosts.posts.map(item => ({ "id": item.id, "author_id": item.author_id, "text": item.text, "datetime": item.datetime })), res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
