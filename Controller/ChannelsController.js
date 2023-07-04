@@ -75,9 +75,11 @@ exports.getById = async (req, res) => {
 exports.get = async (req, res) => {
 
 	try {
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 		var id = req.token_payload.service_id
 
-		var channels = await Channel.find({ "subscribers.user_id": id }, '-_id id title short_link category description subscribers_count')
+		var channels = (await Channel.find({ "subscribers.user_id": id }, '-_id id title short_link category description subscribers_count')).slice(offset, count + offset)
 
 		for (let i in channels) {
 			let channelWithPosts = await Channel.findOne({ "id": channels[i].id }, "posts")
@@ -100,11 +102,13 @@ exports.search = async (req, res) => {
 
 	try {
 		var q = req.query.q ? req.query.q.trim() : null
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 		var id = req.token_payload.service_id
 
 		if (!q) return response.sendDetailedError(6, "invalid request", [{ "key": 'q', "value": 'required' }], res)
 
-		var channels = await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }, '-_id id title short_link category description subscribers_count')
+		var channels = (await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }, '-_id id title short_link category description subscribers_count')).slice(offset, count + offset)
 
 		for (let i in channels) {
 			let channelWithPosts = await Channel.findOne({ "id": channels[i].id }, "posts")

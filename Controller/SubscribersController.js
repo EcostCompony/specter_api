@@ -8,6 +8,8 @@ exports.get = async (req, res) => {
 
 	try {
 		var channel_id = Number(req.query.channel_id)
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 		var id = req.token_payload.service_id
 
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
@@ -16,7 +18,7 @@ exports.get = async (req, res) => {
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user_id": id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		return response.send(channelWithSubscribers.subscribers.map(item => ({ "user_id": item.user_id, "is_admin": item.is_admin })), res)
+		return response.send(channelWithSubscribers.subscribers.slice(offset, count + offset).map(item => ({ "user_id": item.user_id, "is_admin": item.is_admin })), res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
@@ -28,6 +30,8 @@ exports.search = async (req, res) => {
 	try {
 		var channel_id = Number(req.query.channel_id)
 		var q = req.query.q ? req.query.q.trim() : req.query.q
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 		var id = req.token_payload.service_id
 
 		if (!channel_id || !q) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'q', "value": 'required' }], res)
@@ -45,7 +49,7 @@ exports.search = async (req, res) => {
 			}
 		}
 
-		return response.send(subscribers.map(item => ({ "user": item.user, "is_admin": item.is_admin })), res)
+		return response.send(subscribers.slice(offset, count + offset).map(item => ({ "user": item.user, "is_admin": item.is_admin })), res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

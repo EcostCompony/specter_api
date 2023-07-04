@@ -38,6 +38,8 @@ exports.get = async (req, res) => {
 
 	try {
 		var channel_id = Number(req.query.channel_id)
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 		var id = req.token_payload.service_id
 
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
@@ -45,7 +47,7 @@ exports.get = async (req, res) => {
 		var channelWithPosts = await Channel.findOne({ "id": channel_id }, 'title posts')
 		if (!channelWithPosts) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		return response.send(channelWithPosts.posts.map(item => ({ "id": item.id, "author_id": item.author_id, "text": item.text, "datetime": item.datetime })), res)
+		return response.send(channelWithPosts.posts.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).map(item => ({ "id": item.id, "author_id": item.author_id, "text": item.text, "datetime": item.datetime })), res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

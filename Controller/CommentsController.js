@@ -39,13 +39,15 @@ exports.get = async (req, res) => {
 	try {
 		var channel_id = Number(req.query.channel_id)
 		var post_id = Number(req.query.post_id)
+		var count = !Number(req.query.count) || req.query.count < 1 ? 100000000 : Number(req.query.count)
+		var offset = !Number(req.query.offset) || Number(req.query.offset) < 1 ? 0 : Number(req.query.offset)
 
 		if (!channel_id || !post_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }], res)
 		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		var channelWithPost = await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts.$')
 		if (!channelWithPost) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
-		var comments = channelWithPost.posts[0].comments
+		var comments = channelWithPost.posts[0].comments.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset)
 
 		for (let i in comments) delete comments[i]._doc._id
 
