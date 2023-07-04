@@ -1,9 +1,26 @@
 'use strict'
 
-exports.get = async (req, res) => {
+const response = require('./../response')
+const User = require('./../models/User')
 
-	const response = require('./../response')
-	const User = require('./../models/User')
+exports.getById = async (req, res) => {
+
+	try {
+		var user_id = Number(req.query.user_id)
+
+		if (!user_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'user_id', "value": 'required' }], res)
+
+		var user = await User.findOne({ "id": user_id }, "-_id id name short_link")
+		if (!user) return response.sendDetailedError(50, "not exist", [{ "key": 'user_id', "value": user_id }], res)
+
+		return response.send(user, res)
+	} catch (error) {
+		return response.sendSystemError(error, res)
+	}
+
+}
+
+exports.get = async (req, res) => {
 
 	try {
 		var ecost_id = Number(req.query.ecost_id)

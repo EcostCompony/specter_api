@@ -50,6 +50,7 @@ module.exports = app => {
 	app.route('/api/method/subscribers.setAdmin').all(tokenAccessController, versionsController, subscribersController.setAdmin)
 
 	//	users
+	app.route('/api/method/users.getById').all(tokenAccessController, versionsController, usersController.getById)
 	app.route('/api/method/users.get').all(versionsController, usersController.get)
 
 	//	utils
