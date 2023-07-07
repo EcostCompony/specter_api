@@ -7,7 +7,7 @@ exports.getNextSequence = async (table, res) => {
 	const Sequence = require('./../models/Sequence')
 
 	try {
-		return (await Sequence.findOneAndUpdate({ "table": table }, { "$inc": { "count": 1 } })).count
+		return (await Sequence.findOneAndUpdate({ "table": table }, { "$inc": { "count": 1 } })).count + 1
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
