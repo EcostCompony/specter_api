@@ -54,7 +54,7 @@ module.exports = app => {
 	app.route('/api/method/users.get').all(versionsController, usersController.get)
 
 	//	utils
-	app.route('/api/method/utils.getAndroidAppMinimumSupportedVersionCode').all(versionsController, utilsController.getAndroidAppMinimumSupportedVersionCode)
+	app.route('/api/method/utils.getAndroidAppMinimumSupportedVersionCode').all(utilsController.getAndroidAppMinimumSupportedVersionCode)
 
 	app.all('*', (req, res) => {
 

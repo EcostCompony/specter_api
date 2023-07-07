@@ -18,7 +18,7 @@ exports.get = async (req, res) => {
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		return response.send(channelWithSubscribers.subscribers.slice(offset, count + offset).map(item => ({ "user": item.user, "is_admin": item.is_admin })), res)
+		return response.send({ "count": channelWithSubscribers.subscribers.slice(offset, count + offset).length, "total_amount": channelWithSubscribers.subscribers.length, "items": channelWithSubscribers.subscribers.slice(offset, count + offset).map(item => ({ "user": item.user, "is_admin": item.is_admin })) }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
@@ -49,7 +49,7 @@ exports.search = async (req, res) => {
 			}
 		}
 
-		return response.send(subscribers.slice(offset, count + offset).map(item => ({ "user": item.user, "is_admin": item.is_admin })), res)
+		return response.send({ "count": subscribers.slice(offset, count + offset).length, "total_amount": subscribers.length, "items": subscribers.slice(offset, count + offset).map(item => ({ "user": item.user, "is_admin": item.is_admin })) }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

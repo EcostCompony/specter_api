@@ -43,7 +43,7 @@ exports.get = async (req, res) => {
 		var channelWithComments = await Channel.aggregate([{ "$match": { "id": channel_id } }, { "$project": { "comments": { "$filter": { "input": "$comments", "cond": { "$eq": ["$$this.post_id", post_id] } } } } }])
 		await Channel.populate(channelWithComments, { "path": 'comments.author', "select": '-_id id name short_link' })
 
-		return response.send(channelWithComments[0].comments.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).map(item => ({ "id": item.id, "author": item.author, "text": item.text, "datetime": item.datetime })), res)
+		return response.send({ "count": channelWithComments[0].comments.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).length, "total_amount": channelWithComments[0].comments.length, "items": channelWithComments[0].comments.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).map(item => ({ "id": item.id, "author": item.author, "text": item.text, "datetime": item.datetime })) }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

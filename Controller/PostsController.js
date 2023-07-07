@@ -46,7 +46,7 @@ exports.get = async (req, res) => {
 		var channelWithPosts = await Channel.findOne({ "id": channel_id }, 'posts')
 		if (!channelWithPosts) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
-		return response.send(channelWithPosts.posts.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).map(item => ({ "id": item.id, "author": item.author, "text": item.text, "datetime": item.datetime })), res)
+		return response.send({ "count": channelWithPosts.posts.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).length, "total_amount": channelWithPosts.posts.length, "items": channelWithPosts.posts.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset).map(item => ({ "id": item.id, "author": item.author, "text": item.text, "datetime": item.datetime })) }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}

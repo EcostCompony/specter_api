@@ -83,10 +83,12 @@ exports.get = async (req, res) => {
 
 			channels[i]._doc.is_subscriber = 1
 			channels[i]._doc.is_admin = channelWithSubsriber.subscribers[0].is_admin
+			delete channels[i]._doc.subscribers
+			delete channels[i]._doc.comments
 			if (!channels[i]._doc.description) delete channels[i]._doc.description
 		}
 
-		return response.send(channels, res)
+		return response.send({ "count": channels.length, "total_amount": (await Channel.find({ "subscribers.user": id }, 'id')).length, "items": channels }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
@@ -103,17 +105,20 @@ exports.search = async (req, res) => {
 
 		if (!q) return response.sendDetailedError(6, "invalid request", [{ "key": 'q', "value": 'required' }], res)
 
-		var channels = (await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }, '-_id id title short_link category description subscribers_count')).slice(offset, count + offset)
+		var allChannels = await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }, '-_id id title short_link category description subscribers_count')
+		var channels = allChannels.slice(offset, count + offset)
 
 		for (let i in channels) {
 			let channelWithSubsriber = await Channel.findOne({ "id": channels[i].id, "subscribers.user": id }, "subscribers.$")
 
 			channels[i]._doc.is_subscriber = channelWithSubsriber ? 1 : 0
+			delete channels[i]._doc.subscribers
+			delete channels[i]._doc.comments
 			if (channels[i]._doc.is_subscriber) channels[i]._doc.is_admin = channelWithSubsriber.subscribers[0].is_admin
 			if (!channels[i]._doc.description) delete channels[i]._doc.description
 		}
 
-		return response.send(channels, res)
+		return response.send({ "count": channels.length, "total_amount": allChannels.length, "items": channels }, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)
 	}
