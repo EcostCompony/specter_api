@@ -6,13 +6,17 @@ const User = require('./../models/User')
 exports.getById = async (req, res) => {
 
 	try {
+		// Блок получения query-параметров
 		var user_id = Number(req.query.user_id)
 
+		// Блок обработки ошибок
 		if (!user_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'user_id', "value": 'required' }], res)
 
+		// Блок получения информации для ответа
 		var user = await User.findOne({ "id": user_id }, "-_id id name short_link")
 		if (!user) return response.sendDetailedError(50, "not exist", [{ "key": 'user_id', "value": user_id }], res)
 
+		// Блок отправки ответа
 		return response.send(user, res)
 	} catch (error) {
 		return response.sendSystemError(error, res)

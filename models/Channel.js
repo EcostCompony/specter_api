@@ -37,12 +37,4 @@ const Channel = new Schema({
 	"comments": [Comment]
 })
 
-var autoPopulate = function(next) {
-	this.populate('subscribers.user', "-_id id name short_link")
-	this.populate('comments.author', "-_id id name short_link")
-	next()
-}
-
-Channel.pre('findOne', autoPopulate).pre('find', autoPopulate)
-
 module.exports = model('Channel', Channel)
