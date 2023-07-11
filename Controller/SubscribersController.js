@@ -19,8 +19,8 @@ exports.get = async (req, res) => {
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
 
 		// Блок получения информации для ответа
-		var channelWithSubscribers = await Channel.findOne({ "id": channel_id }, 'subscribers.user subscribers.is_admin')
-		if (!channelWithSubscribers) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		var channelWithSubscribers = await Channel.findOne({ "id": channel_id }, 'inactive subscribers.user subscribers.is_admin')
+		if (!channelWithSubscribers || channelWithSubscribers.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		// Блок обработки ошибок
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
@@ -50,7 +50,8 @@ exports.search = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !short_link) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'short_link', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
@@ -84,7 +85,8 @@ exports.setAdmin = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !user_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'user_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		var subscriberUser = await User.findOne({ "id": user_id })

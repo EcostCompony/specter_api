@@ -27,6 +27,7 @@ const Channel = new Schema({
 	"id": { "type": Number, "unique": true, "required": true },
 	"title": { "type": String, "required": true },
 	"short_link": { "type": String, "unique": true, "required": true },
+	"inactive": { "type": Number },
 	"category": { "type": Number, "required": true },
 	"description": String,
 	"subscribers_count": { "type": Number, "default": 1, "required": true },

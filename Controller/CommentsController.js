@@ -17,7 +17,8 @@ exports.create = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !post_id || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts.$')) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 		if (text == '') return response.sendDetailedError(7, "invalid parameter value", [{ "key": 'text', "value": text }], res)
 
@@ -50,7 +51,8 @@ exports.get = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !post_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "posts.id": post_id }, 'posts.$')) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
 
 		// Блок получения информации для ответа
@@ -81,7 +83,8 @@ exports.edit = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !comment_id || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'comment_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithComment = await Channel.findOne({ "id": channel_id, "comments.id": comment_id }, "comments.$")
 		if (!channelWithComment) return response.sendDetailedError(50, "not exist", [{ "key": 'comment_id', "value": comment_id }], res)
 		if (channelWithComment.comments[0].author.id != user.id) return response.sendDetailedError(8, "access denied", [{ "key": 'comment_id', "value": comment_id }], res)
@@ -110,7 +113,8 @@ exports.delete = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !comment_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'comment_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithComment = await Channel.findOne({ "id": channel_id, "comments.id": comment_id }, "comments.$")
 		await Channel.populate(channelWithComment, { "path": 'comments.author', "select": '-_id id name short_link' })
 		if (!channelWithComment) return response.sendDetailedError(50, "not exist", [{ "key": 'comment_id', "value": comment_id }], res)

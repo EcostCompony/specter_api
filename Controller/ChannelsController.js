@@ -65,7 +65,7 @@ exports.getById = async (req, res) => {
 		for (let i in rawFields) if (rawFields[i].match(/^(category|description|subscribers_count)$/)) fields += ' ' + rawFields[i]
 
 		// Блок получения информации для ответа
-		var channel = await Channel.findOne({ "id": channel_id }, '-_id id title short_link' + fields)
+		var channel = await Channel.findOne({ "id": channel_id }, '-_id id title short_link inactive' + fields)
 		if (!channel) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		// Блок подготовки ответа
@@ -74,6 +74,10 @@ exports.getById = async (req, res) => {
 		item.is_subscriber = channelWithSubsriber ? 1 : 0
 		item.is_admin = channelWithSubsriber ? channelWithSubsriber.subscribers[0].is_admin : 0
 		if (!item.description) delete item.description
+		if (item.inactive) {
+			let { id, title, short_link, inactive, is_admin, is_subscriber } = item
+			item = { id, title, short_link, inactive, is_admin, is_subscriber }
+		}
 
 		// Блок отправки ответа
 		return response.send(item, res)
@@ -99,7 +103,7 @@ exports.get = async (req, res) => {
 		for (let i in rawFields) if (rawFields[i].match(/^(category|description|subscribers_count)$/)) fields += ' ' + rawFields[i]
 
 		// Блок получения информации для ответа
-		var channels = await Channel.find({ "subscribers.user": user._id }, '-_id id title short_link' + fields)
+		var channels = await Channel.find({ "subscribers.user": user._id }, '-_id id title short_link inactive' + fields)
 
 		// Блок подготовки ответа
 		var items = channels.slice(offset, count + offset)
@@ -107,6 +111,10 @@ exports.get = async (req, res) => {
 			items[i]._doc.is_subscriber = 1
 			items[i]._doc.is_admin = (await Channel.findOne({ "id": channels[i].id, "subscribers.user": user._id }, 'subscribers.$')).subscribers[0].is_admin
 			if (!items[i].description) delete items[i]._doc.description
+			if (items[i].inactive) {
+				let { id, title, short_link, inactive, is_admin, is_subscriber } = items[i]._doc
+				items[i]._doc = { id, title, short_link, inactive, is_admin, is_subscriber }
+			}
 		}
 
 		// Блок отправки ответа
@@ -137,7 +145,7 @@ exports.search = async (req, res) => {
 		for (let i in rawFields) if (rawFields[i].match(/^(category|description|subscribers_count)$/)) fields += ' ' + rawFields[i]
 
 		// Блок получения информации для ответа
-		var channels = await Channel.find({ "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }, '-_id id title short_link' + fields)
+		var channels = await Channel.find({ "$and": [{ "inactive": null }, { "$or": [{ "title": { "$regex": `(?i)${q}` } }, { "short_link": { "$regex": `(?i)${q}` } }] }] }, '-_id id title short_link' + fields)
 
 		// Блок подготовки ответа
 		var items = channels.slice(offset, count + offset)
@@ -167,7 +175,8 @@ exports.subscribe = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (await Channel.findOne({ "id": channel_id, "subscribers.user": user._id })) return response.sendError(300, "the user is already subscribed", res)
 
 		// Блок выполнения действия
@@ -192,7 +201,8 @@ exports.unsubscribe = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "subscribers.user": user._id })) return response.sendError(301, "the user is not subscribed", res)
 
 		// Блок выполнения действия
@@ -221,7 +231,8 @@ exports.edit = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !title && !short_link && !category && category !== 0 && !description) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'title', "value": 'optional*' }, { "key": 'short_link', "value": 'optional*' }, { "key": 'category', "value": 'optional*' }, { "key": 'description', "value": 'optional*' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (title && title.length > 64 || short_link && (!short_link.match(/^[a-z][a-z\d\_\.]{2,30}[a-z\d]$/) || short_link.replaceAll(/[a-z\d]/g, '').length / short_link.length > 0.4) || category && (category < 0 || category > 2) || description && description.length > 256) {
@@ -259,12 +270,13 @@ exports.delete = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		// Блок выполнения действия
-		await Channel.findOneAndRemove({ "id": channel_id })
+		await Channel.findOneAndUpdate({ "id": channel_id }, { "inactive": 1 })
 
 		// Блок отправки ответа
 		return response.send(1, res)

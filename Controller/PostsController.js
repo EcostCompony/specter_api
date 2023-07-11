@@ -17,7 +17,8 @@ exports.create = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !author || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'author', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (text == '' || author < 1 || author > 2) {
@@ -52,8 +53,8 @@ exports.get = async (req, res) => {
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'count', "value": 'optional' }, { "key": 'offset', "value": 'optional' }], res)
 
 		// Блок получения информации для ответа
-		var channelWithPosts = await Channel.findOne({ "id": channel_id }, 'posts.id posts.author posts.text posts.datetime')
-		if (!channelWithPosts) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		var channelWithPosts = await Channel.findOne({ "id": channel_id }, 'inactive posts.id posts.author posts.text posts.datetime')
+		if (!channelWithPosts || channelWithPosts.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		// Блок подготовки ответа
 		var items = channelWithPosts.posts.sort((a, b) => b.datetime - a.datetime).slice(offset, count + offset)
@@ -79,7 +80,8 @@ exports.edit = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !post_id || !text) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }, { "key": 'text', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "posts.id": post_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
@@ -108,7 +110,8 @@ exports.delete = async (req, res) => {
 
 		// Блок обработки ошибок
 		if (!channel_id || !post_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }, { "key": 'post_id', "value": 'required' }], res)
-		if (!await Channel.findOne({ "id": channel_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
+		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
+		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		if (!await Channel.findOne({ "id": channel_id, "posts.id": post_id })) return response.sendDetailedError(50, "not exist", [{ "key": 'post_id', "value": post_id }], res)
