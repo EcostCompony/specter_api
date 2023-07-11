@@ -86,6 +86,7 @@ exports.edit = async (req, res) => {
 		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
 		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
 		let channelWithComment = await Channel.findOne({ "id": channel_id, "comments.id": comment_id }, "comments.$")
+		await Channel.populate(channelWithComment, { "path": 'comments.author', "select": '-_id id name short_link' })
 		if (!channelWithComment) return response.sendDetailedError(50, "not exist", [{ "key": 'comment_id', "value": comment_id }], res)
 		if (channelWithComment.comments[0].author.id != user.id) return response.sendDetailedError(8, "access denied", [{ "key": 'comment_id', "value": comment_id }], res)
 		if (text == '') return response.sendDetailedError(7, "invalid parameter value", [{ "key": 'text', "value": text }], res)

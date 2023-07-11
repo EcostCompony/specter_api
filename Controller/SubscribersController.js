@@ -57,9 +57,9 @@ exports.search = async (req, res) => {
 
 		// Блок получения информации для ответа
 		var userByShortLink = await User.findOne({ "short_link": short_link })
-		if (!userByShortLink) return response.sendDetailedError(50, "not exist", [{ "key": 'short_link', "value": short_link }], res)
+		if (!userByShortLink) return response.sendError(601, "subscriber not found", res)
 		var subscriberByShortLink = await Channel.findOne({ "id": channel_id, "subscribers.user": userByShortLink._id }, "subscribers.$")
-		if (!subscriberByShortLink) return response.sendDetailedError(50, "not exist", [{ "key": 'short_link', "value": short_link }], res)
+		if (!subscriberByShortLink) return response.sendError(601, "subscriber not found", res)
 
 		// Блок подготовки ответа
 		await Channel.populate(subscriberByShortLink, { "path": 'subscribers.user', "select": '-_id id name short_link' })
@@ -90,7 +90,8 @@ exports.setAdmin = async (req, res) => {
 		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
 		if (!channelWithSubsriber || !channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 		var subscriberUser = await User.findOne({ "id": user_id })
-		channelWithSubscriber2 = await Channel.findOne({ "id": channel_id, "subscribers.user": subscriberUser._id }, "subscribers.$")
+		if (!subscriberUser) return response.sendDetailedError(50, "not exist", [{ "key": 'user_id', "value": user_id }], res)
+		var channelWithSubscriber2 = await Channel.findOne({ "id": channel_id, "subscribers.user": subscriberUser._id }, "subscribers.$")
 		if (!channelWithSubscriber2) return response.sendDetailedError(50, "not exist", [{ "key": 'user_id', "value": user_id }], res)
 		if (channelWithSubscriber2.subscribers[0].is_admin) return response.sendError(600, "the user is already an admin", res)
 

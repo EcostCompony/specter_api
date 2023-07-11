@@ -203,7 +203,9 @@ exports.unsubscribe = async (req, res) => {
 		if (!channel_id) return response.sendDetailedError(6, "invalid request", [{ "key": 'channel_id', "value": 'required' }], res)
 		let channelWithInactive = await Channel.findOne({ "id": channel_id }, 'inactive')
 		if (!channelWithInactive || channelWithInactive.inactive) return response.sendDetailedError(50, "not exist", [{ "key": 'channel_id', "value": channel_id }], res)
-		if (!await Channel.findOne({ "id": channel_id, "subscribers.user": user._id })) return response.sendError(301, "the user is not subscribed", res)
+		let channelWithSubsriber = await Channel.findOne({ "id": channel_id, "subscribers.user": user._id }, "subscribers.$")
+		if (!channelWithSubsriber) return response.sendError(301, "the user is not subscribed", res)
+		if (channelWithSubsriber.subscribers[0].is_admin) return response.sendDetailedError(8, "access denied", [{ "key": 'channel_id', "value": channel_id }], res)
 
 		// Блок выполнения действия
 		await Channel.findOneAndUpdate({ "id": channel_id }, { "$inc": { "subscribers_count": -1 }, "$pull": { "subscribers": { "user": user._id } } })

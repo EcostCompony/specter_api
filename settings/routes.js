@@ -16,41 +16,41 @@ module.exports = app => {
 	const utilsController = require('./../Controller/UtilsController')
 
 	//	account
-	app.route('/api/method/account.get').all(tokenAccessController, versionsController, accountController.get)
-	app.route('/api/method/account.edit').all(tokenAccessController, versionsController, accountController.edit)
+	app.route('/api/method/account.get').all(versionsController, tokenAccessController, accountController.get)
+	app.route('/api/method/account.edit').all(versionsController, tokenAccessController, accountController.edit)
 
 	//	auth
-	app.route('/api/method/auth').all(tokenAuthController, versionsController, authController)
+	app.route('/api/method/auth').all(versionsController, tokenAuthController, authController)
 
 	//	channels
-	app.route('/api/method/channels.create').all(tokenAccessController, versionsController, channelsController.create)
-	app.route('/api/method/channels.getById').all(tokenAccessController, versionsController, channelsController.getById)
-	app.route('/api/method/channels.get').all(tokenAccessController, versionsController, channelsController.get)
-	app.route('/api/method/channels.search').all(tokenAccessController, versionsController, channelsController.search)
-	app.route('/api/method/channels.subscribe').all(tokenAccessController, versionsController, channelsController.subscribe)
-	app.route('/api/method/channels.unsubscribe').all(tokenAccessController, versionsController, channelsController.unsubscribe)
-	app.route('/api/method/channels.edit').all(tokenAccessController, versionsController, channelsController.edit)
-	app.route('/api/method/channels.delete').all(tokenAccessController, versionsController, channelsController.delete)
+	app.route('/api/method/channels.create').all(versionsController, tokenAccessController, channelsController.create)
+	app.route('/api/method/channels.getById').all(versionsController, tokenAccessController, channelsController.getById)
+	app.route('/api/method/channels.get').all(versionsController, tokenAccessController, channelsController.get)
+	app.route('/api/method/channels.search').all(versionsController, tokenAccessController, channelsController.search)
+	app.route('/api/method/channels.subscribe').all(versionsController, tokenAccessController, channelsController.subscribe)
+	app.route('/api/method/channels.unsubscribe').all(versionsController, tokenAccessController, channelsController.unsubscribe)
+	app.route('/api/method/channels.edit').all(versionsController, tokenAccessController, channelsController.edit)
+	app.route('/api/method/channels.delete').all(versionsController, tokenAccessController, channelsController.delete)
 
 	//	comments
-	app.route('/api/method/comments.create').all(tokenAccessController, versionsController, commentsController.create)
-	app.route('/api/method/comments.get').all(tokenAccessController, versionsController, commentsController.get)
-	app.route('/api/method/comments.edit').all(tokenAccessController, versionsController, commentsController.edit)
-	app.route('/api/method/comments.delete').all(tokenAccessController, versionsController, commentsController.delete)
+	app.route('/api/method/comments.create').all(versionsController, tokenAccessController, commentsController.create)
+	app.route('/api/method/comments.get').all(versionsController, tokenAccessController, commentsController.get)
+	app.route('/api/method/comments.edit').all(versionsController, tokenAccessController, commentsController.edit)
+	app.route('/api/method/comments.delete').all(versionsController, tokenAccessController, commentsController.delete)
 
 	//	posts
-	app.route('/api/method/posts.create').all(tokenAccessController, versionsController, postsController.create)
-	app.route('/api/method/posts.get').all(tokenAccessController, versionsController, postsController.get)
-	app.route('/api/method/posts.edit').all(tokenAccessController, versionsController, postsController.edit)
-	app.route('/api/method/posts.delete').all(tokenAccessController, versionsController, postsController.delete)
+	app.route('/api/method/posts.create').all(versionsController, tokenAccessController, postsController.create)
+	app.route('/api/method/posts.get').all(versionsController, tokenAccessController, postsController.get)
+	app.route('/api/method/posts.edit').all(versionsController, tokenAccessController, postsController.edit)
+	app.route('/api/method/posts.delete').all(versionsController, tokenAccessController, postsController.delete)
 
 	//	subscribers
-	app.route('/api/method/subscribers.get').all(tokenAccessController, versionsController, subscribersController.get)
-	app.route('/api/method/subscribers.search').all(tokenAccessController, versionsController, subscribersController.search)
-	app.route('/api/method/subscribers.setAdmin').all(tokenAccessController, versionsController, subscribersController.setAdmin)
+	app.route('/api/method/subscribers.get').all(versionsController, tokenAccessController, subscribersController.get)
+	app.route('/api/method/subscribers.search').all(versionsController, tokenAccessController, subscribersController.search)
+	app.route('/api/method/subscribers.setAdmin').all(versionsController, tokenAccessController, subscribersController.setAdmin)
 
 	//	users
-	app.route('/api/method/users.getById').all(tokenAccessController, versionsController, usersController.getById)
+	app.route('/api/method/users.getById').all(versionsController, tokenAccessController, usersController.getById)
 	app.route('/api/method/users.get').all(versionsController, usersController.get)
 
 	//	utils
